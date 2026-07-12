@@ -10,7 +10,6 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
-use App\Models\Role;
 use App\Models\User;
 use App\Services\AuthService;
 use Illuminate\Auth\Events\PasswordReset;
@@ -27,26 +26,10 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request): JsonResponse
     {
-        $defaultRole = Role::where('slug', 'user')->first();
-
-        $user = User::create([
-            'role_id' => $defaultRole?->id,
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'status' => UserStatus::Active,
-        ]);
-
-        $token = $this->authService->createToken($user);
-
         return response()->json([
-            'success' => true,
-            'message' => 'Registration successful.',
-            'data' => [
-                'user' => new UserResource($user->load('role')),
-                'token' => $token,
-            ],
-        ], 201);
+            'success' => false,
+            'message' => 'Public registration is disabled. Contact an administrator to create an account.',
+        ], 403);
     }
 
     public function login(LoginRequest $request): JsonResponse
@@ -60,6 +43,15 @@ class AuthController extends Controller
 
         /** @var User $user */
         $user = Auth::user();
+
+        if (! $user->isAdmin()) {
+            Auth::logout();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Admin access only. Proctor accounts use the mobile examination application.',
+            ], 403);
+        }
 
         if ($user->status !== UserStatus::Active) {
             Auth::logout();

@@ -10,7 +10,9 @@ class RoleController extends Controller
 {
     public function index(): JsonResponse
     {
-        $roles = Role::orderBy('id')->get();
+        $roles = Role::whereIn('slug', Role::ASSIGNABLE_SLUGS)
+            ->orderBy('id')
+            ->get();
 
         return response()->json([
             'success' => true,

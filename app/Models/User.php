@@ -55,19 +55,19 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(TestItem::class);
     }
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->role?->slug === 'super-admin';
-    }
-
     public function isAdmin(): bool
     {
-        return $this->role?->slug === 'admin';
+        return $this->role?->isAdmin() ?? false;
+    }
+
+    public function isProctor(): bool
+    {
+        return $this->role?->isProctor() ?? false;
     }
 
     public function isAdminOrAbove(): bool
     {
-        return $this->role?->isAdminOrAbove() ?? false;
+        return $this->isAdmin();
     }
 
     public function scopeSearch($query, ?string $search)

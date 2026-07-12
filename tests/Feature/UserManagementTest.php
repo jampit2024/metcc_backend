@@ -29,17 +29,36 @@ class UserManagementTest extends TestCase
             ->assertJsonStructure(['success', 'data', 'meta']);
     }
 
-    public function test_admin_cannot_update_super_admin(): void
+    public function test_admin_can_disable_and_enable_user(): void
     {
         $admin = $this->createUser('admin');
-        $superAdmin = $this->createUser('super-admin');
+        $proctor = $this->createUser('proctor');
         $token = $admin->createToken('test')->plainTextToken;
 
-        $response = $this->withToken($token)->putJson("/api/users/{$superAdmin->id}", [
-            'name' => 'Blocked Update',
+        $disableResponse = $this->withToken($token)->patchJson("/api/users/{$proctor->id}/status", [
+            'status' => 'inactive',
         ]);
 
-        $response->assertForbidden();
+        $disableResponse->assertOk()
+            ->assertJsonPath('data.status', 'inactive');
+
+        $enableResponse = $this->withToken($token)->patchJson("/api/users/{$proctor->id}/status", [
+            'status' => 'active',
+        ]);
+
+        $enableResponse->assertOk()
+            ->assertJsonPath('data.status', 'active');
+    }
+
+    public function test_roles_endpoint_returns_admin_and_proctor_only(): void
+    {
+        $admin = $this->createUser('admin');
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $response = $this->withToken($token)->getJson('/api/roles');
+
+        $response->assertOk();
+        $this->assertSame(['admin', 'proctor'], collect($response->json('data'))->pluck('slug')->all());
     }
 
     private function createUser(string $roleSlug): User

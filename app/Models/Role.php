@@ -7,6 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Role extends Model
 {
+    public const SLUG_ADMIN = 'admin';
+
+    public const SLUG_PROCTOR = 'proctor';
+
+    public const ASSIGNABLE_SLUGS = [self::SLUG_ADMIN, self::SLUG_PROCTOR];
+
     protected $fillable = [
         'name',
         'slug',
@@ -17,18 +23,18 @@ class Role extends Model
         return $this->hasMany(User::class);
     }
 
-    public function isSuperAdmin(): bool
-    {
-        return $this->slug === 'super-admin';
-    }
-
     public function isAdmin(): bool
     {
-        return $this->slug === 'admin';
+        return $this->slug === self::SLUG_ADMIN;
+    }
+
+    public function isProctor(): bool
+    {
+        return $this->slug === self::SLUG_PROCTOR;
     }
 
     public function isAdminOrAbove(): bool
     {
-        return in_array($this->slug, ['super-admin', 'admin'], true);
+        return $this->isAdmin();
     }
 }

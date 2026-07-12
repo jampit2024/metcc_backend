@@ -18,7 +18,7 @@ class AuthTest extends TestCase
         $this->seed(\Database\Seeders\RoleSeeder::class);
     }
 
-    public function test_user_can_register(): void
+    public function test_public_registration_is_disabled(): void
     {
         $response = $this->postJson('/api/auth/register', [
             'name' => 'Test User',
@@ -27,16 +27,16 @@ class AuthTest extends TestCase
             'password_confirmation' => 'password',
         ]);
 
-        $response->assertStatus(201)
-            ->assertJsonStructure(['success', 'data' => ['user', 'token']]);
+        $response->assertForbidden()
+            ->assertJsonPath('success', false);
     }
 
-    public function test_user_can_login(): void
+    public function test_admin_can_login(): void
     {
-        $role = Role::where('slug', 'user')->first();
+        $role = Role::where('slug', 'admin')->first();
         User::create([
             'role_id' => $role->id,
-            'name' => 'Test User',
+            'name' => 'Test Admin',
             'email' => 'login@example.com',
             'password' => Hash::make('password'),
             'status' => 'active',
@@ -51,9 +51,29 @@ class AuthTest extends TestCase
             ->assertJsonStructure(['success', 'data' => ['user', 'token']]);
     }
 
+    public function test_proctor_cannot_login_to_web_app(): void
+    {
+        $role = Role::where('slug', 'proctor')->first();
+        User::create([
+            'role_id' => $role->id,
+            'name' => 'Test Proctor',
+            'email' => 'proctor@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson('/api/auth/login', [
+            'email' => 'proctor@example.com',
+            'password' => 'password',
+        ]);
+
+        $response->assertForbidden()
+            ->assertJsonPath('success', false);
+    }
+
     public function test_authenticated_user_can_get_profile(): void
     {
-        $user = $this->createUser();
+        $user = $this->createUser('admin');
         $token = $user->createToken('test')->plainTextToken;
 
         $response = $this->withToken($token)->getJson('/api/auth/me');
@@ -62,7 +82,7 @@ class AuthTest extends TestCase
             ->assertJsonPath('data.email', $user->email);
     }
 
-    private function createUser(string $roleSlug = 'user'): User
+    private function createUser(string $roleSlug = 'admin'): User
     {
         $role = Role::where('slug', $roleSlug)->first();
 

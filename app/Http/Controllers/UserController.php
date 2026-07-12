@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserStatus;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use App\Http\Requests\User\UpdateUserStatusRequest;
 use App\Http\Resources\UserResource;
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -39,15 +40,6 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $role = Role::findOrFail($request->role_id);
-
-        if ($role->isSuperAdmin() && ! $request->user()->isSuperAdmin()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'You cannot assign the Super Admin role.',
-            ], 403);
-        }
-
         $user = User::create($request->validated());
 
         return response()->json([
@@ -71,17 +63,6 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        if ($request->filled('role_id')) {
-            $role = Role::findOrFail($request->role_id);
-
-            if ($role->isSuperAdmin() && ! $request->user()->isSuperAdmin()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You cannot assign the Super Admin role.',
-                ], 403);
-            }
-        }
-
         $data = $request->validated();
         if (empty($data['password'])) {
             unset($data['password']);
@@ -96,16 +77,44 @@ class UserController extends Controller
         ]);
     }
 
+    public function updateStatus(UpdateUserStatusRequest $request, User $user): JsonResponse
+    {
+        $this->authorize('update', $user);
+
+        $status = UserStatus::from($request->validated('status'));
+        $user->status = $status;
+        $user->save();
+
+        if ($status === UserStatus::Inactive) {
+            $user->tokens()->delete();
+        }
+
+        $message = $status === UserStatus::Active
+            ? 'User activated successfully.'
+            : 'User disabled successfully.';
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => new UserResource($user->fresh()->load('role')),
+        ]);
+    }
+
     public function destroy(Request $request, User $user): JsonResponse
     {
         $this->authorize('delete', $user);
 
+        if ($user->status !== UserStatus::Inactive) {
+            $user->status = UserStatus::Inactive;
+            $user->save();
+        }
+
         $user->tokens()->delete();
-        $user->delete();
 
         return response()->json([
             'success' => true,
-            'message' => 'User deleted successfully.',
+            'message' => 'User disabled successfully.',
+            'data' => new UserResource($user->fresh()->load('role')),
         ]);
     }
 }

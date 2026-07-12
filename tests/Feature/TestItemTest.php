@@ -22,7 +22,7 @@ class TestItemTest extends TestCase
 
     public function test_user_can_create_test_item(): void
     {
-        $user = $this->createUser('user');
+        $user = $this->createUser('proctor');
         $token = $user->createToken('test')->plainTextToken;
 
         $response = $this->withToken($token)->postJson('/api/test-items', [
@@ -37,8 +37,8 @@ class TestItemTest extends TestCase
 
     public function test_user_only_sees_own_items(): void
     {
-        $user = $this->createUser('user');
-        $other = $this->createUser('user');
+        $user = $this->createUser('proctor');
+        $other = $this->createUser('proctor');
         TestItem::create([
             'user_id' => $other->id,
             'title' => 'Other Item',

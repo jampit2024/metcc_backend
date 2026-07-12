@@ -30,8 +30,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('profile/photo', [ProfileController::class, 'uploadPhoto']);
     Route::delete('profile/photo', [ProfileController::class, 'removePhoto']);
 
-    Route::middleware('role:super-admin,admin')->group(function () {
+    Route::middleware('role:admin')->group(function () {
         Route::get('roles', [RoleController::class, 'index']);
+        Route::patch('users/{user}/status', [UserController::class, 'updateStatus']);
         Route::apiResource('users', UserController::class);
     });
 

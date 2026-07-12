@@ -17,7 +17,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'role_id' => Role::where('slug', 'user')->value('id'),
+            'role_id' => Role::where('slug', Role::SLUG_PROCTOR)->value('id'),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),

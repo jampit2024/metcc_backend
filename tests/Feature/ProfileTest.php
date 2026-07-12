@@ -34,7 +34,7 @@ class ProfileTest extends TestCase
 
     private function createUser(): User
     {
-        $role = Role::where('slug', 'user')->first();
+        $role = Role::where('slug', 'admin')->first();
 
         return User::create([
             'role_id' => $role->id,
