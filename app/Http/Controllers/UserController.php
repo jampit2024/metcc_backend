@@ -40,7 +40,10 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $user = User::create($request->validated());
+        $user = User::create([
+            ...$request->validated(),
+            'status' => UserStatus::Active,
+        ]);
 
         return response()->json([
             'success' => true,

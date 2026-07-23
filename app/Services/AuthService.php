@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -15,17 +14,5 @@ class AuthService
     public function revokeCurrentToken(User $user): void
     {
         $user->currentAccessToken()?->delete();
-    }
-
-    public function deleteAccount(User $user, string $password): bool
-    {
-        if (! Hash::check($password, $user->password)) {
-            return false;
-        }
-
-        $user->tokens()->delete();
-        $user->delete();
-
-        return true;
     }
 }

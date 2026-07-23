@@ -33,12 +33,12 @@ class GoogleAuthService
             }
 
             if (! $user->isAdmin()) {
-                throw new \RuntimeException('Admin access only.');
-            }
+            throw new \RuntimeException('Admin access only. Proctor accounts use the mobile examination application.');
+        }
 
             return $user;
         }
 
-        throw new \RuntimeException('No admin account found for this Google email.');
+        throw new \RuntimeException('No admin account found for this Google email. Only administrators can sign in to the web portal.');
     }
 }

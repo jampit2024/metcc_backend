@@ -61,6 +61,24 @@ class UserManagementTest extends TestCase
         $this->assertSame(['admin', 'proctor'], collect($response->json('data'))->pluck('slug')->all());
     }
 
+    public function test_admin_can_create_user_without_status(): void
+    {
+        $admin = $this->createUser('admin');
+        $proctorRole = Role::where('slug', 'proctor')->first();
+        $token = $admin->createToken('test')->plainTextToken;
+
+        $response = $this->withToken($token)->postJson('/api/users', [
+            'name' => 'New Proctor',
+            'email' => 'new.proctor@example.com',
+            'password' => 'password',
+            'role_id' => $proctorRole->id,
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('data.status', 'active')
+            ->assertJsonPath('data.email', 'new.proctor@example.com');
+    }
+
     private function createUser(string $roleSlug): User
     {
         $role = Role::where('slug', $roleSlug)->first();

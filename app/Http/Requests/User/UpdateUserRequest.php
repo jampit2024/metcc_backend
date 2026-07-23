@@ -29,8 +29,6 @@ class UpdateUserRequest extends FormRequest
                 Rule::exists('roles', 'id')->where(fn ($query) => $query->whereIn('slug', Role::ASSIGNABLE_SLUGS)),
             ],
             'status' => ['sometimes', 'required', Rule::enum(UserStatus::class)],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'address' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

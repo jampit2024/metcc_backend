@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\User;
 
-use App\Enums\UserStatus;
 use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,9 +24,6 @@ class StoreUserRequest extends FormRequest
                 'required',
                 Rule::exists('roles', 'id')->where(fn ($query) => $query->whereIn('slug', Role::ASSIGNABLE_SLUGS)),
             ],
-            'status' => ['required', Rule::enum(UserStatus::class)],
-            'phone' => ['nullable', 'string', 'max:50'],
-            'address' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

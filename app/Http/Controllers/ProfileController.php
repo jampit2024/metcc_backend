@@ -8,7 +8,6 @@ use App\Http\Resources\UserResource;
 use App\Services\ProfilePhotoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class ProfileController extends Controller
 {
@@ -37,14 +36,12 @@ class ProfileController extends Controller
     public function uploadPhoto(UploadPhotoRequest $request): JsonResponse
     {
         $user = $request->user();
-        $path = $this->photoService->upload($user, $request->file('photo'));
+        $this->photoService->upload($user, $request->file('photo'));
 
         return response()->json([
             'success' => true,
             'message' => 'Profile photo uploaded successfully.',
-            'data' => [
-                'profile_photo_url' => Storage::disk('public')->url($path),
-            ],
+            'data' => new UserResource($user->fresh()->load('role')),
         ]);
     }
 

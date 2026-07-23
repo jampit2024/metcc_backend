@@ -18,6 +18,18 @@ class UserSeeder extends Seeder
         $proctorRole = Role::where('slug', 'proctor')->firstOrFail();
 
         $admin = User::updateOrCreate(
+            ['email' => 'rommeljampit21@gmail.com'],
+            [
+                'role_id' => $adminRole->id,
+                'name' => 'Rommel Jampit',
+                'password' => Hash::make('Password123!'),
+                'status' => UserStatus::Active,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // Keep a secondary local admin for API smoke tests.
+        User::updateOrCreate(
             ['email' => 'admin@example.com'],
             [
                 'role_id' => $adminRole->id,

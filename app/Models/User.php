@@ -27,6 +27,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'phone',
         'address',
         'profile_photo_path',
+        'theme',
+        'locale',
         'google_id',
         'email_verified_at',
     ];

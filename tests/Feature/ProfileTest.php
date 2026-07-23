@@ -25,11 +25,38 @@ class ProfileTest extends TestCase
 
         $response = $this->withToken($token)->putJson('/api/profile/update', [
             'name' => 'Updated Name',
-            'phone' => '1234567890',
+            'email' => $user->email,
         ]);
 
         $response->assertOk()
             ->assertJsonPath('data.name', 'Updated Name');
+    }
+
+    public function test_user_can_update_theme_and_locale(): void
+    {
+        $user = $this->createUser();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $response = $this->withToken($token)->putJson('/api/profile/update', [
+            'theme' => 'dark',
+            'locale' => 'fil',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.theme', 'dark')
+            ->assertJsonPath('data.locale', 'fil');
+    }
+
+    public function test_delete_account_endpoint_is_removed(): void
+    {
+        $user = $this->createUser();
+        $token = $user->createToken('test')->plainTextToken;
+
+        $response = $this->withToken($token)->deleteJson('/api/auth/delete-account', [
+            'password' => 'password',
+        ]);
+
+        $response->assertNotFound();
     }
 
     private function createUser(): User

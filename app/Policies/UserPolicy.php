@@ -28,8 +28,9 @@ class UserPolicy
 
     public function delete(User $user, User $model): bool
     {
+        // Accounts cannot be deleted — admins may only disable other users.
         if ($user->id === $model->id) {
-            return true;
+            return false;
         }
 
         return $user->isAdmin();

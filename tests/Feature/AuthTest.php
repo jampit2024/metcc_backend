@@ -68,7 +68,27 @@ class AuthTest extends TestCase
         ]);
 
         $response->assertForbidden()
-            ->assertJsonPath('success', false);
+            ->assertJsonPath('success', false)
+            ->assertJsonPath('message', 'Admin access only. Proctor accounts use the mobile examination application.');
+    }
+
+    public function test_forgot_password_does_not_send_for_proctor_email(): void
+    {
+        $role = Role::where('slug', 'proctor')->first();
+        User::create([
+            'role_id' => $role->id,
+            'name' => 'Test Proctor',
+            'email' => 'proctor.reset@example.com',
+            'password' => Hash::make('password'),
+            'status' => 'active',
+        ]);
+
+        $response = $this->postJson('/api/auth/forgot-password', [
+            'email' => 'proctor.reset@example.com',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true);
     }
 
     public function test_authenticated_user_can_get_profile(): void

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
 use App\Http\Requests\Auth\ChangePasswordRequest;
-use App\Http\Requests\Auth\DeleteAccountRequest;
 use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
@@ -94,6 +93,17 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
     {
+        $user = User::where('email', $request->email)->first();
+
+        // Web portal password reset is for admin accounts only.
+        // Return a generic success response so we do not reveal account roles.
+        if (! $user || ! $user->isAdmin()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'If that admin email is registered, a password reset link has been sent.',
+            ]);
+        }
+
         $status = Password::sendResetLink($request->only('email'));
 
         if ($status !== Password::RESET_LINK_SENT) {
@@ -155,23 +165,6 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Password changed successfully.',
             'data' => ['token' => $token],
-        ]);
-    }
-
-    public function deleteAccount(DeleteAccountRequest $request): JsonResponse
-    {
-        $user = $request->user();
-
-        if (! $this->authService->deleteAccount($user, $request->password)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Password is incorrect.',
-            ], 422);
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Account deleted successfully.',
         ]);
     }
 }
